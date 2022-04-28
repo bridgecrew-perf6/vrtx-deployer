@@ -1,0 +1,142 @@
+#!/usr/local/bin/php
+<?php
+
+// If no username is provided, don't proceed.
+if(!isset($argv[1])) {
+	die("Please specify a cpanel username\n");
+}
+
+$user = $argv[1];
+// Check that the username provided exists
+// and is valid.
+exec("uapi --user=$user Contactus is_enabled", $exists);
+if(!is_array($exists) || empty($exists)) {
+	die("\n\nInvalid cpanel username specified.\n");
+}
+
+$pass = base64_encode(random_bytes(12));
+$home = '/home/'.$user;
+$cred_dir = $home.'/cred';
+if(!file_exists($cred_dir)) {
+	mkdir($cred_dir, '0440');
+	chown($cred_dir, $user);
+	chgrp($cred_dir, $user);
+}
+
+// Store DB credentials in a file
+file_put_contents($cred_dir.'/dbpass', $pass);
+chown($cred_dir.'/dbpass', $user);
+chgrp($cred_dir.'/dbpass', $user);
+file_put_contents($cred_dir.'/dbuser', $user.'_user');
+chown($cred_dir.'/dbuser', $user);
+chgrp($cred_dir.'/dbuser', $user);
+file_put_contents($cred_dir.'/dbname', $user.'_drupal');
+chown($cred_dir.'/dbname', $user);
+chgrp($cred_dir.'/dbname', $user);
+
+// Add the public ssh key
+file_put_contents($home.'/cred/key.pub', 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDEtZ+T+3JAVrhRmuxsNxc1F0croylCRR4SNWB0XS0KPxRj2Ntqmiv2KxE/DeulnJ3oDQSxziyeA9ppHCCkptjW2Xe6lwA9UIHacg1MF+S22bjmCVPEEZQFesViUILg0D6x45AH68m3HUDkNBdQUQRhhDPQgIjJiAO5ay4PECGMpUG6RZXxKh76RS3nqfMxnYv0sOmHKOqXF8PP/tv018lj2oaYvXLBhSDe+QIugYmQre3O+LI0mSZH7haj/o41GdluV8OOUYWrG9nr2mN8NHVvzeJX/UX/HaSk4/XWPbAjhWEDgF2SLRJk7ovbdqz3MgJEC4NTrIgBLfKbQYI+N/Gz ryanvrtx@web01.hmpcloud.com');
+chown($home.'/cred/key.pub', $user);
+chgrp($home.'/cred/key.pub', $user);
+
+
+// Add the private ssh key
+file_put_contents($home.'/cred/key', '-----BEGIN RSA PRIVATE KEY-----
+MIIEowIBAAKCAQEAxLWfk/tyQFa4UZrsbDcXNRdHK6MpQkUeEjVgdF0tCj8UY9jb
+apor9isRPw3rpZyd6A0Esc4sngPaaRwgpKbY1tl3upcAPVCB2nINTBfkttm45glT
+xBGUBXrFYlCC4NA+seOQB+vJtx1A5DQXUFEEYYQz0ICIyYgDuWsuDxAhjKVBukWV
+8Soe+kUt56nzMZ2L9LDphyjqlxfDz/7b9NfJY9qGmL1ywYUg3vkCLoGJkK3tzviy
+NJkmR+4Wo/6ONRnZblfDjlGFqxvZ69pjfDR1b83iV/1F/x2kpOP11j2wI4VhA4Bd
+ki0SZO6L23as9zICRAuDU6yIAS3ym0GCPjfxswIDAQABAoIBAB5c+pjZAzWzLRhL
+lZrOliJ3yWCO+ttj19RvsMfFaiJewkL3QkceLRL+atcUyv7xQd6Dw+m+LVzms1vu
+H4vKxUXEo5qFnF/agXC6khrgxUkEKmo3nlpxbCu8W6NlUg5ploPW4HCYkLZXKaEP
++VlIaCi1Q1o3vOV+vTRtutpQXx1aT1RwsoLYi9akJXTM63cqGC/EUD14K7M9F1rd
+s/pE+63duYYOGBV+BFi2ahqDuo0h8l15jXhPk12qQA3evm4RXd2KXveXOmJ8Mqrc
+8fQ882zHSClh7n3YcZwUVdxQ04FE9IWP+xxpxo99yMAo36IzXmcnkPV1YE26zNiI
+TfC8/YECgYEA9NuI2LJ+z2I9sPoWy3/wcDkWb/3dSaww6puOt/zIeFeHhrVAUlas
+5lxAmNPvpVdEeTYT8ZB2EIpSrUDc5FHLpA7sAA40BNfJMeXv5FTBsrN3cyu8qqKf
+spxqNOZh7yQBGNT1s5Ypn+ig1JYcWhyW5mFm/P7sbwdNgD0mduVzVrECgYEAzakw
+KcU425wUI4WOShvSlAsNkXtQ3NuypsukgOUbNkCfVtjep3aInln1LU2q9/EF3KwG
+/ld7kH8CNquJ0T6D3B6HfJe/HF28ANJm4eumzJyvyvfDsowyPgpZg8e0e5r85dPu
+jorSEzM1uCH74p4zCJasat94yj67ovkNnrSBb6MCgYBQbMNYGdjZGTWWKa7PDKjW
+04lxI3tJtYsjpBCOkjLuhCF5t5L2+I015Ns613IBZtaQ0ZhfYcnFyQk66vEi9VLk
+Ahq2MfQYGyB0iUfwQX6VyajUZWtEyMGXkxS3Z2yHddX+aASEBjCJ24joCp4pYvaV
+mSyQsNLL7SQhmPRHXTozIQKBgQCoBDHB3ksONxvIzWKqrsJBiioikZFFbgMs+y/A
+0euCThce13xHabJBVBLWWR51Ayab2rq37XaYXPrM+SVVmfIV0ac0pbBPF1DxhvLg
+XSne/Z8sfXAWnSyqvL/Wxj9vv/YeOR8qusTXRL39WV40DLR6rsXbZgiDie63PSrg
+Xm1kawKBgH2vUAvzE1aON3I4Xglhso7Chq7UVhVyu4gJw6i4c6V+YLe0bysmdquL
+0q/x7jgaurAqO+H7jVf7M+/VaplEZXIhNZ8iITPE+Sgf3aGgAthW+5xmCjsmTkJC
+dCLs/yeVKFwKgFRuHsad/ql9fVKFFgw7u/AH1THw7hk+6Jt3Fkf2
+-----END RSA PRIVATE KEY-----');
+chown($home.'/cred/key', $user);
+chgrp($home.'/cred/key', $user);
+
+if(!file_exists($home.'/.ssh')) {
+	mkdir($home.'/.ssh');
+	chown($home.'/.ssh', $user);
+	chgrp($home.'/.ssh', $user);
+}
+file_put_contents($home.'/.ssh/config', 'Host github.com
+  IdentityFile ~/cred/key
+');
+chown($home.'/.ssh/config', $user);
+chgrp($home.'/.ssh/config', $user);
+
+
+// Create the database
+exec("uapi --user=$user Mysql create_database name={$user}_drupal");
+
+// Create the user
+exec("uapi --user=$user Mysql create_user name={$user}_user password=$pass");
+
+// Give user permission to the DB
+exec("uapi --user=$user Mysql set_privileges_on_database user={$user}_user database={$user}_drupal privileges=ALL");
+
+// Get mysql host
+exec("uapi --user=$user Mysql get_server_information | grep 'host:'", $host_output);
+if(isset($host_output[0])) {
+	$host = trim(str_replace('host:', '', $host_output[0]));
+} else {
+	$host = 'localhost';
+}
+file_put_contents($cred_dir.'/dbhost', $host);
+chown($cred_dir.'/dbhost', $user);
+chgrp($cred_dir.'/dbhost', $user);
+
+foreach (scandir($home.'/public_html') as $file) {
+	if($file != '.' && $file != '..') {
+		if(is_dir($home.'/public_html/'.$file)) {
+			echo "Removing directory $file\n";
+			rmdir($home.'/public_html/'.$file);
+			exec('rm -rf '.$home.'/public_html/'.$file);
+		} else {
+			echo "Removing file $file\n";
+			unlink($home.'/public_html/'.$file);
+		}
+	}
+}
+
+// Fix permissions, things won't work 
+// if permissions are too open
+chmod($home.'/.ssh/config', 0700);
+chmod($home.'/cred', 0755);
+chmod($home.'/cred/key.pub', 0644);
+chmod($home.'/cred/key', 0600);
+
+// Create the known hosts file, it won't work without it
+exec("runuser -l $user -c 'ssh-keyscan -H github.com >> ~/.ssh/known_hosts'");
+
+// Git clone as the user. 
+exec("runuser -l $user -c 'git clone git@github.com:HMP-Global/VRTX1.git public_html'");
+
+// Import the DB
+exec("zcat public_html/vrtx22_datab.sql.gz | mysql {$user}_drupal");
+
+// Remove the DB file, so it's not web accessible anymore.
+exec("rm -f public_html/vrtx22_datab.sql.gz");
+
+// Create the known hosts file, it won't work without it
+exec("runuser -l $user -c 'composer install --working-dir=public_html'");
+
+// Clear Drupal Cache
+exec("www/vendor/bin/drush --root=public_html cr");
