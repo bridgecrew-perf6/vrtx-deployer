@@ -86,6 +86,9 @@ chgrp($home.'/.ssh/config', $user);
 // Create the database
 exec("uapi --user=$user Mysql create_database name={$user}_drupal");
 
+// Delete the user, just in case it already exists
+exec("uapi --user=$user Mysql delete_user name={$user}_user");
+
 // Create the user
 exec("uapi --user=$user Mysql create_user name={$user}_user password=$pass");
 
